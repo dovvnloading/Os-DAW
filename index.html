@@ -214,6 +214,7 @@
             
             <div class="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-widest text-daw-muted">
                 <a href="#interactive-demo" class="hover:text-white transition-colors">Interface</a>
+                <a href="#video-demo" class="hover:text-white transition-colors">Demo</a>
                 <a href="#features" class="hover:text-white transition-colors">Specs</a>
                 <a href="#ai" class="hover:text-white transition-colors">Intelligence</a>
             </div>
@@ -399,6 +400,39 @@
             </div>
         </div>
     </header>
+
+    <!-- NEW: Video Demo Section -->
+    <section id="video-demo" class="py-20 bg-daw-surface/10 border-t border-daw-border relative overflow-hidden">
+        <!-- Ambient Background Glow -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-purple-500 opacity-[0.03] blur-[120px] rounded-full pointer-events-none"></div>
+
+        <div class="max-w-5xl mx-auto px-6 relative z-10">
+            <div class="text-center mb-12">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/5 border border-white/10 mb-4">
+                    <i data-lucide="play-circle" size="14" class="text-white"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-daw-muted">Video Walkthrough</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">See it in Action.</h2>
+            </div>
+
+            <!-- Video Container with TV/Monitor Styling -->
+            <div class="relative group rounded-2xl border border-daw-border bg-[#0a0a0a] shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden">
+                <!-- Inner Bezel -->
+                <div class="p-2 bg-[#121212] rounded-2xl border border-white/5">
+                    <div class="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-inner">
+                        <iframe 
+                            class="absolute top-0 left-0 w-full h-full"
+                            src="https://www.youtube.com/embed/RSXCIh_uyI4?si=96qTCMUWEZV6JEx3" 
+                            title="Os-Daw Demo" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Specs Grid -->
     <section id="features" class="py-24 bg-daw-surface/20 border-y border-daw-border">
