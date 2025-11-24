@@ -1,354 +1,634 @@
-
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="dark scroll-smooth">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Os-Daw | The Browser-Based Audio Workstation</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Os-Daw | Interactive Web Audio Workstation</title>
+    <meta name="description" content="A professional-grade, open-source web-based Digital Audio Workstation.">
     
-    <style>
-        :root {
-            /* Exact variables from source code */
-            --c-bg: #212121;
-            --c-panel: #212121;
-            --c-surface: #262626;
-            --c-accent: #FFFFFF;
-            --c-text: #E0E0E0;
-            --c-muted: #757575;
-            --c-dark: #121212;
-
-            /* Neumorphic Shadows */
-            --s-neu-out: 6px 6px 12px #191919, -6px -6px 12px #292929;
-            --s-neu-in: inset 6px 6px 12px #191919, inset -6px -6px 12px #292929;
-            --s-neu-btn: 4px 4px 8px #191919, -4px -4px 8px #292929;
-            --s-neu-pressed: inset 3px 3px 6px #191919, inset -3px -3px 6px #292929;
-            --s-neu-glow: 0 0 15px rgba(255, 255, 255, 0.1);
-        }
-
-        body {
-            background-color: var(--c-bg);
-            color: var(--c-text);
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-        }
-
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-
-        /* Utility classes mirroring the App */
-        .shadow-neu-out { box-shadow: var(--s-neu-out); }
-        .shadow-neu-in { box-shadow: var(--s-neu-in); }
-        .shadow-neu-btn { box-shadow: var(--s-neu-btn); }
-        .shadow-neu-pressed { box-shadow: var(--s-neu-pressed); }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--c-muted); border-radius: 3px; opacity: 0.5; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-
-        /* Animation for the visualizer simulation */
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        .knob-indicator {
-            transition: transform 0.1s ease-out;
-        }
-    </style>
+    <!-- Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Design System Config -->
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        daw: {
-                            bg: 'var(--c-bg)',
-                            surface: 'var(--c-surface)',
-                            accent: 'var(--c-accent)',
-                            text: 'var(--c-text)',
-                            muted: 'var(--c-muted)',
-                            dark: 'var(--c-dark)'
-                        }
-                    }
-                }
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              daw: {
+                bg: '#0F0F0F',
+                panel: '#141414',
+                surface: '#1F1F1F',
+                border: '#333333',
+                accent: '#EDEDED',
+                muted: '#666666',
+                highlight: '#FFFFFF',
+                green: '#4ADE80',
+                red: '#EF4444'
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace']
+            },
+            boxShadow: {
+                'knob': '0 4px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+                'led-active': '0 0 8px #4ADE80',
+                'step-active': '0 0 10px rgba(255,255,255,0.8)'
             }
+          }
         }
+      }
     </script>
-</head>
-<body class="min-h-screen flex flex-col">
 
-    <!-- APP HEADER RECREATION -->
-    <nav class="h-20 bg-daw-bg border-b border-daw-surface/10 flex items-center justify-between px-6 shadow-neu-out sticky top-0 z-50">
-        <!-- Left: Logo & Visualizer -->
-        <div class="flex items-center gap-8">
-            <div class="flex items-center gap-4">
-                <div class="p-2.5 rounded-full shadow-neu-out text-daw-text">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+    <style>
+      :root {
+        --c-bg: #0F0F0F;
+      }
+
+      body {
+        background-color: var(--c-bg);
+        color: #E0E0E0;
+        antialiased;
+        overflow-x: hidden;
+      }
+
+      /* Noise Texture */
+      .noise-bg {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 50;
+      }
+
+      .glass-panel {
+        background: rgba(31, 31, 31, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .text-gradient {
+        background: linear-gradient(to bottom right, #FFFFFF, #999999);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* --- INTERACTIVE COMPONENTS CSS --- */
+
+      /* Knob Styling */
+      .knob-wrapper {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.5rem;
+          user-select: none;
+      }
+
+      .knob-body {
+        width: 64px;
+        height: 64px;
+        background: conic-gradient(from 180deg, #1a1a1a 0%, #2a2a2a 100%);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+        border-radius: 50%;
+        position: relative;
+        cursor: ns-resize;
+        transition: transform 0.1s;
+      }
+      
+      .knob-body:active {
+          transform: scale(0.98);
+      }
+
+      .knob-body::after {
+        content: '';
+        position: absolute;
+        top: 10%; left: 10%;
+        width: 80%;
+        height: 80%;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #141414, #1a1a1a);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+      }
+
+      .knob-pointer {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        border-radius: 50%;
+        z-index: 10;
+        /* Rotation handled by JS */
+        transform: rotate(-135deg); 
+        pointer-events: none;
+      }
+
+      .knob-pointer::before {
+        content: '';
+        position: absolute;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 6px #fff;
+      }
+
+      /* Sequencer Step */
+      .step-btn {
+          width: 100%;
+          height: 2rem; /* h-8 */
+          border-radius: 0.25rem;
+          cursor: pointer;
+          transition: all 0.1s;
+          position: relative;
+          border: 1px solid #333;
+          background-color: #1a1a1a;
+      }
+      
+      .step-btn:hover {
+          border-color: #555;
+      }
+
+      .step-btn.active {
+          background-color: #EDEDED;
+          border-color: #fff;
+          box-shadow: 0 0 10px rgba(255,255,255,0.5);
+      }
+
+      /* Playhead Playback Highlight */
+      .step-btn.playing-now::after {
+          content: '';
+          position: absolute;
+          top: -4px; bottom: -4px;
+          left: 50%; transform: translateX(-50%);
+          width: 2px;
+          background-color: #EF4444; /* Red Playhead */
+          z-index: 20;
+          box-shadow: 0 0 5px #EF4444;
+          pointer-events: none;
+      }
+
+      /* Meters */
+      .meter-bar {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(to top, #4ADE80 0%, #EAB308 70%, #EF4444 100%);
+          transform-origin: bottom;
+          transform: scaleY(0); /* Driven by JS */
+          transition: transform 0.05s ease-out;
+          opacity: 0.8;
+      }
+
+      /* Grid Pattern for Synth BG */
+      .grid-pattern {
+        background-size: 20px 20px;
+        background-image: 
+            linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      }
+    </style>
+</head>
+<body class="selection:bg-white selection:text-black">
+    
+    <div class="noise-bg"></div>
+
+    <!-- Top Banner -->
+    <div class="w-full bg-daw-highlight text-black text-[10px] font-bold font-mono py-1.5 text-center uppercase tracking-[0.2em] relative z-40">
+        Experimental Web Audio Prototype
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-8 w-full z-40 px-6">
+        <div class="max-w-6xl mx-auto glass-panel rounded-full h-14 flex items-center justify-between px-6 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black shadow-lg">
+                    <i data-lucide="waves" size="16"></i>
                 </div>
-                <h1 class="text-xl font-bold tracking-widest text-daw-text uppercase hidden md:block">Os-Daw</h1>
-                
-                <!-- Fake Visualizer -->
-                <div class="w-36 h-12 bg-[#0a0a0a] rounded-lg relative overflow-hidden border border-daw-surface/20 hidden lg:block group">
-                    <canvas id="nav-vis" width="300" height="100" class="w-full h-full opacity-80"></canvas>
-                    <div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_2px] pointer-events-none"></div>
-                </div>
+                <span class="font-bold tracking-widest text-sm uppercase">Os-Daw</span>
             </div>
             
-            <div class="h-10 w-[2px] rounded-full bg-daw-bg shadow-neu-pressed hidden sm:block"></div>
-
-            <!-- Fake Transport -->
-            <div class="flex items-center gap-4 hidden md:flex">
-                <div class="w-10 h-10 flex items-center justify-center rounded-full shadow-neu-out text-daw-muted">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
-                </div>
-                <div class="w-14 h-14 flex items-center justify-center rounded-full shadow-neu-pressed text-daw-accent">
-                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3" /></svg>
-                </div>
-                <div class="w-10 h-10 flex items-center justify-center rounded-full shadow-neu-out text-daw-muted">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="10" /></svg>
-                </div>
+            <div class="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-widest text-daw-muted">
+                <a href="#interactive-demo" class="hover:text-white transition-colors">Interface</a>
+                <a href="#features" class="hover:text-white transition-colors">Specs</a>
+                <a href="#ai" class="hover:text-white transition-colors">Intelligence</a>
             </div>
-        </div>
 
-        <!-- Center: Status -->
-        <div class="hidden xl:flex items-center gap-2 bg-daw-bg px-4 py-2 rounded-full shadow-neu-pressed">
-            <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse shadow-[0_0_8px_currentColor]"></span>
-            <span class="text-[10px] font-bold text-daw-muted uppercase tracking-widest">System Status: Prototype Active</span>
-        </div>
-
-        <!-- Right: Links -->
-        <div class="flex items-center gap-6">
-            <a href="https://github.com/dovvnloading/Os-DAW" target="_blank" class="flex items-center gap-3 px-5 py-2.5 rounded-full shadow-neu-out text-daw-muted hover:text-daw-text hover:shadow-neu-btn transition-all font-bold text-xs uppercase tracking-wider">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0 3 1.5l2.5 2.5c3.25.08 6.5.08 9.75 0l2.5-2.5 1.5.08 3 0 0-3.5C23 16 20 18 20 18s-3 2-6 2-5-2-6-5.5c-.73 1.02-1.08 2.25-1 3.5"/></svg>
-                Source
+            <a href="https://github.com/dovvnloading/Os-DAW" target="_blank" class="flex items-center gap-2 text-xs font-bold bg-white text-black px-4 py-1.5 rounded-full hover:bg-gray-200 transition-colors shadow-lg">
+                <i data-lucide="github" size="14"></i>
+                <span>Star Repo</span>
             </a>
-            <button class="flex items-center gap-3 px-5 py-2.5 rounded-full shadow-neu-pressed text-daw-accent font-bold text-xs uppercase tracking-wider hover:shadow-neu-out transition-all">
-                Launch App
-            </button>
         </div>
     </nav>
 
-    <!-- HERO / WORKSPACE -->
-    <main class="flex-1 flex flex-col lg:flex-row relative z-10">
-        
-        <!-- Left: Product Copy (Styled as a track list/sidebar) -->
-        <div class="lg:w-1/3 bg-daw-bg border-r border-daw-surface/10 flex flex-col p-8 lg:p-12 justify-center relative z-20 shadow-[10px_0_30px_rgba(0,0,0,0.1)]">
-            <div class="mb-8">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-daw-surface/50 border border-daw-surface/10 text-[10px] font-mono uppercase tracking-widest text-daw-accent mb-6">
-                    v0.1.0 // Experimental Build
+    <!-- Hero Section -->
+    <header class="relative pt-40 pb-20 overflow-hidden min-h-screen flex flex-col justify-center">
+        <!-- Ambient Glow -->
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-white opacity-[0.03] blur-[150px] rounded-full pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-6 text-center relative z-10 w-full">
+            
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-daw-border bg-daw-surface/50 mb-8 backdrop-blur-sm animate-fade-in-up">
+                <span class="w-1.5 h-1.5 rounded-full bg-daw-green animate-pulse"></span>
+                <span class="text-[10px] font-mono text-daw-muted uppercase tracking-widest">v0.1.0 • React 19 • Web Audio</span>
+            </div>
+
+            <h1 class="text-5xl md:text-8xl font-bold tracking-tighter mb-8 text-gradient">
+                Zero Install.<br>
+                Pure Audio.
+            </h1>
+            
+            <p class="text-base md:text-lg text-daw-muted max-w-xl mx-auto mb-16 font-light leading-relaxed">
+                A professional-grade Digital Audio Workstation running natively in your browser. 
+                Experience the interactive prototype below.
+            </p>
+
+            <!-- --- INTERACTIVE DEMO --- -->
+            <div id="interactive-demo" class="max-w-5xl mx-auto relative group">
+                <!-- Outer Glow -->
+                <div class="absolute -inset-1 bg-gradient-to-b from-white to-transparent opacity-[0.05] blur-2xl rounded-3xl transition-opacity group-hover:opacity-[0.1]"></div>
+                
+                <div class="bg-[#121212] rounded-3xl border border-daw-border shadow-2xl overflow-hidden relative text-left">
+                    
+                    <!-- Toolbar / Status Bar -->
+                    <div class="h-14 border-b border-daw-border bg-[#181818] flex items-center justify-between px-6">
+                        <div class="flex gap-4 items-center">
+                            <!-- Play Button -->
+                            <button id="play-btn" class="w-10 h-10 rounded-full border border-daw-border bg-[#222] hover:bg-[#2a2a2a] text-daw-muted hover:text-white flex items-center justify-center transition-all shadow-lg active:scale-95">
+                                <i data-lucide="play" size="14" fill="currentColor"></i>
+                            </button>
+                            <button class="w-10 h-10 rounded-full border border-daw-border bg-[#222] text-daw-muted flex items-center justify-center shadow-lg cursor-not-allowed opacity-50">
+                                <i data-lucide="square" size="14" fill="currentColor"></i>
+                            </button>
+                        </div>
+
+                        <!-- BPM Display -->
+                        <div class="h-8 px-4 bg-[#0a0a0a] rounded border border-[#222] flex items-center justify-center gap-2 shadow-inner">
+                            <span class="text-[12px] font-mono font-bold text-daw-green animate-pulse">128.00</span>
+                            <span class="text-[8px] font-bold text-daw-muted uppercase">BPM</span>
+                        </div>
+
+                        <!-- System Icons -->
+                        <div class="flex gap-4 opacity-50 text-daw-muted">
+                            <div class="flex items-center gap-1 text-[10px] font-bold font-mono">
+                                <div class="w-2 h-2 rounded-full bg-daw-green"></div>
+                                ONLINE
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Interface Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 min-h-[420px]">
+                        
+                        <!-- Left: Synth Rack (Interactive) -->
+                        <div class="md:col-span-8 p-8 border-r border-daw-border grid-pattern relative select-none">
+                            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-[#121212] pointer-events-none"></div>
+
+                            <div class="relative z-10 flex flex-col gap-10">
+                                <!-- Module Header -->
+                                <div class="flex justify-between items-end border-b border-daw-border pb-3">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="zap" size="16" class="text-daw-muted"></i>
+                                        <h3 class="text-xs font-bold uppercase tracking-widest text-white">Oscillator A</h3>
+                                    </div>
+                                    <div class="flex gap-1.5">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-daw-green shadow-led-active"></div>
+                                        <div class="w-1.5 h-1.5 rounded-full bg-[#333]"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Knobs Row (Fully Functional) -->
+                                <div class="flex flex-wrap gap-10 justify-center md:justify-start items-start">
+                                    
+                                    <!-- Knob 1: Detune -->
+                                    <div class="knob-wrapper">
+                                        <div class="knob-body" id="knob-detune" data-value="20" data-min="0" data-max="100">
+                                            <div class="knob-pointer"></div>
+                                        </div>
+                                        <span class="text-[10px] font-bold uppercase text-daw-muted">Detune</span>
+                                        <span class="text-[10px] font-mono text-white opacity-0 transition-opacity" id="val-detune">20</span>
+                                    </div>
+
+                                    <!-- Knob 2: Cutoff (Affects Visualizer) -->
+                                    <div class="knob-wrapper">
+                                        <div class="knob-body" id="knob-cutoff" data-value="65" data-min="0" data-max="100">
+                                            <div class="knob-pointer"></div>
+                                        </div>
+                                        <span class="text-[10px] font-bold uppercase text-daw-muted">Cutoff</span>
+                                        <span class="text-[10px] font-mono text-white opacity-0 transition-opacity" id="val-cutoff">65Hz</span>
+                                    </div>
+
+                                    <!-- Knob 3: Resonance -->
+                                    <div class="knob-wrapper">
+                                        <div class="knob-body" id="knob-res" data-value="40" data-min="0" data-max="100">
+                                            <div class="knob-pointer"></div>
+                                        </div>
+                                        <span class="text-[10px] font-bold uppercase text-daw-muted">Res</span>
+                                        <span class="text-[10px] font-mono text-white opacity-0 transition-opacity" id="val-res">4.0</span>
+                                    </div>
+
+                                    <!-- Live Visualizer Screen -->
+                                    <div class="h-[80px] w-full md:w-32 bg-[#050505] rounded-lg border border-[#333] shadow-inner relative overflow-hidden flex items-center justify-center opacity-90 ml-auto">
+                                        <!-- Grid Lines -->
+                                        <div class="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(50,50,50,0.5)_25%,transparent_26%)] bg-[length:20px_100%]"></div>
+                                        <div class="absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(50,50,50,0.5)_25%,transparent_26%)] bg-[length:100%_20px]"></div>
+                                        
+                                        <!-- Dynamic Waveform -->
+                                        <svg id="visualizer-wave" viewBox="0 0 100 40" class="w-full h-full text-daw-green stroke-current fill-none stroke-2 opacity-80" style="filter: drop-shadow(0 0 4px rgba(74,222,128,0.5));">
+                                            <path id="wave-path" d="M0 20 Q 25 5 50 20 T 100 20" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Step Sequencer (Interactive) -->
+                                <div class="mt-4">
+                                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-daw-muted mb-3 flex items-center gap-2">
+                                        <i data-lucide="layers" size="12"></i> Pattern Sequencer
+                                    </h3>
+                                    <div class="grid grid-cols-8 md:grid-cols-16 gap-1" id="sequencer-grid">
+                                        <!-- JS will inject steps here -->
+                                        <!-- Default Static Layout for No-JS fallback -->
+                                        <div class="step-btn"></div><div class="step-btn active"></div><div class="step-btn"></div><div class="step-btn"></div>
+                                        <div class="step-btn active"></div><div class="step-btn"></div><div class="step-btn"></div><div class="step-btn"></div>
+                                        <div class="step-btn"></div><div class="step-btn active"></div><div class="step-btn"></div><div class="step-btn"></div>
+                                        <div class="step-btn active"></div><div class="step-btn"></div><div class="step-btn"></div><div class="step-btn active"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Mixer Strip -->
+                        <div class="md:col-span-4 bg-[#141414] p-6 flex flex-col items-center relative border-l border-daw-border shadow-2xl">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                            
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-daw-muted mb-8 flex items-center gap-2">
+                                <i data-lucide="bar-chart-2" size="12"></i> Master Bus
+                            </h3>
+                            
+                            <!-- Master Fader Assembly -->
+                            <div class="flex-1 w-full max-w-[100px] bg-[#0F0F0F] rounded-xl shadow-inner border border-[#222] p-3 flex gap-3 justify-center">
+                                
+                                <!-- Meters (JS Animated) -->
+                                <div class="w-2.5 bg-[#1a1a1a] rounded-full overflow-hidden flex flex-col-reverse justify-start">
+                                    <div class="meter-bar" id="meter-l"></div>
+                                </div>
+                                <div class="w-2.5 bg-[#1a1a1a] rounded-full overflow-hidden flex flex-col-reverse justify-start">
+                                    <div class="meter-bar" id="meter-r"></div>
+                                </div>
+
+                                <!-- Fader Track -->
+                                <div class="w-1.5 bg-[#222] h-full relative mx-2 rounded-full">
+                                    <div class="absolute top-[20%] left-1/2 -translate-x-1/2 w-10 h-16 bg-gradient-to-b from-[#222] to-[#111] border-t border-white/20 shadow-2xl rounded flex items-center justify-center cursor-ns-resize hover:bg-[#2a2a2a] group">
+                                        <div class="w-8 h-[2px] bg-white shadow-[0_0_6px_white] group-hover:bg-daw-green group-hover:shadow-[0_0_8px_#4ADE80] transition-colors"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 text-center">
+                                <div class="text-[10px] font-bold text-daw-muted">OUT 1/2</div>
+                                <div class="text-[12px] font-mono text-white font-bold">-6.2dB</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h1 class="text-5xl lg:text-6xl font-bold tracking-tighter text-daw-text mb-6">
-                    Audio in the <br/>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">Browser.</span>
-                </h1>
-                <p class="text-daw-muted leading-relaxed text-sm lg:text-base max-w-md">
-                    Os-Daw is a zero-dependency Digital Audio Workstation prototype exploring the limits of the Web Audio API. 
-                    Synthesize, sample, and arrange without leaving Chrome.
+                
+                <p class="text-center mt-6 text-[10px] font-mono text-daw-muted uppercase">
+                    This is for visual purpose only
                 </p>
             </div>
-
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="p-4 rounded-xl shadow-neu-out bg-daw-bg border border-daw-surface/5">
-                    <div class="text-[10px] font-bold text-daw-muted uppercase tracking-widest mb-1">Engine</div>
-                    <div class="text-xl font-bold text-daw-text">64-bit</div>
-                    <div class="text-[10px] text-daw-muted">Float DSP</div>
-                </div>
-                <div class="p-4 rounded-xl shadow-neu-out bg-daw-bg border border-daw-surface/5">
-                    <div class="text-[10px] font-bold text-daw-muted uppercase tracking-widest mb-1">Latency</div>
-                    <div class="text-xl font-bold text-daw-text">&lt;10ms</div>
-                    <div class="text-[10px] text-daw-muted">Lookahead Sched</div>
-                </div>
-            </div>
-
-            <div class="flex gap-4">
-                <button class="flex-1 py-4 rounded-xl shadow-neu-out hover:shadow-neu-btn active:shadow-neu-pressed text-daw-text font-bold text-xs uppercase tracking-wider transition-all border border-daw-surface/5">
-                    Documentation
-                </button>
-                <button class="flex-1 py-4 rounded-xl shadow-neu-pressed text-daw-accent font-bold text-xs uppercase tracking-wider transition-all border border-daw-surface/5 flex items-center justify-center gap-2">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                    Explore Demo
-                </button>
-            </div>
         </div>
+    </header>
 
-        <!-- Right: The "Interface" (Visual Feature Grid) -->
-        <div class="flex-1 bg-daw-dark overflow-hidden relative flex flex-col p-8 gap-8 custom-scrollbar overflow-y-auto">
+    <!-- Specs Grid -->
+    <section id="features" class="py-24 bg-daw-surface/20 border-y border-daw-border">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl font-bold mb-12 tracking-tight text-white">System Specifications</h2>
             
-            <!-- Grid Background Pattern -->
-            <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 40px 40px;"></div>
-
-            <!-- Feature 1: Sequencer Simulation -->
-            <div class="w-full bg-daw-bg rounded-3xl shadow-neu-out p-6 border border-daw-surface/5 relative z-10">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full shadow-neu-pressed flex items-center justify-center text-daw-accent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg></div>
-                        <span class="text-xs font-bold uppercase tracking-wider text-daw-text">Step Sequencer</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="md:col-span-2 p-8 bg-daw-panel border border-daw-border rounded-2xl hover:border-white/20 transition-colors group">
+                    <div class="w-10 h-10 bg-daw-surface rounded-full flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform shadow-lg border border-daw-border">
+                        <i data-lucide="layers" size="20"></i>
                     </div>
-                    <div class="flex gap-1">
-                        <div class="w-2 h-2 rounded-full bg-daw-surface shadow-neu-in"></div>
-                        <div class="w-2 h-2 rounded-full bg-daw-surface shadow-neu-in"></div>
-                    </div>
-                </div>
-
-                <!-- Fake Grid -->
-                <div class="space-y-3">
-                    <!-- Row 1 -->
-                    <div class="flex items-center gap-4">
-                        <div class="w-24 text-[10px] font-bold text-daw-muted uppercase tracking-widest">Kick 808</div>
-                        <div class="flex-1 flex gap-2">
-                            <!-- JS generates squares -->
-                            <div class="grid grid-cols-8 gap-2 w-full" id="seq-grid-1"></div>
-                        </div>
-                    </div>
-                     <!-- Row 2 -->
-                     <div class="flex items-center gap-4">
-                        <div class="w-24 text-[10px] font-bold text-daw-muted uppercase tracking-widest">Hi-Hat</div>
-                        <div class="flex-1 flex gap-2">
-                            <div class="grid grid-cols-8 gap-2 w-full" id="seq-grid-2"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Feature Row: Synth & Mix -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                <!-- Synth Card -->
-                <div class="bg-daw-bg rounded-3xl shadow-neu-out p-6 border border-daw-surface/5">
-                    <div class="flex items-center gap-3 mb-6 border-b border-daw-surface/10 pb-4">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M2 12a10 10 0 0 1 20 0"/></svg>
-                        <span class="text-xs font-bold uppercase tracking-wider text-daw-text">Synthesis Engine</span>
-                    </div>
-                    
-                    <div class="flex justify-around items-center py-4">
-                        <!-- CSS Knob 1 -->
-                        <div class="flex flex-col items-center gap-3">
-                            <div class="w-16 h-16 rounded-full bg-daw-bg shadow-neu-out relative flex items-center justify-center border border-daw-surface/5">
-                                <div class="absolute w-full h-full rounded-full" style="transform: rotate(45deg);">
-                                    <div class="absolute top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-daw-accent rounded-full shadow-[0_0_8px_white]"></div>
-                                </div>
-                                <div class="w-6 h-6 rounded-full bg-daw-bg shadow-neu-pressed opacity-50"></div>
-                            </div>
-                            <span class="text-[9px] uppercase font-bold text-daw-muted">Cutoff</span>
-                        </div>
-                         <!-- CSS Knob 2 -->
-                         <div class="flex flex-col items-center gap-3">
-                            <div class="w-16 h-16 rounded-full bg-daw-bg shadow-neu-out relative flex items-center justify-center border border-daw-surface/5">
-                                <div class="absolute w-full h-full rounded-full" style="transform: rotate(120deg);">
-                                    <div class="absolute top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-daw-accent rounded-full shadow-[0_0_8px_white]"></div>
-                                </div>
-                                <div class="w-6 h-6 rounded-full bg-daw-bg shadow-neu-pressed opacity-50"></div>
-                            </div>
-                            <span class="text-[9px] uppercase font-bold text-daw-muted">Resonance</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mixer Card -->
-                <div class="bg-daw-bg rounded-3xl shadow-neu-out p-6 border border-daw-surface/5 flex flex-col">
-                    <div class="flex items-center gap-3 mb-6 border-b border-daw-surface/10 pb-4">
-                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-16M6 20v-10M18 20v-4"/></svg>
-                        <span class="text-xs font-bold uppercase tracking-wider text-daw-text">Mixer Console</span>
-                    </div>
-
-                    <div class="flex-1 flex justify-center gap-6 items-end pb-2">
-                        <!-- Fader 1 -->
-                        <div class="h-32 w-8 bg-daw-bg rounded-full shadow-neu-in relative border border-daw-surface/5">
-                            <div class="absolute bottom-[60%] left-0 right-0 h-6 bg-daw-bg rounded shadow-neu-btn flex items-center justify-center border-t border-daw-surface/20">
-                                <div class="w-4 h-[2px] bg-daw-accent shadow-[0_0_4px_white]"></div>
-                            </div>
-                        </div>
-                        <!-- Fader 2 -->
-                         <div class="h-32 w-8 bg-daw-bg rounded-full shadow-neu-in relative border border-daw-surface/5">
-                            <div class="absolute bottom-[30%] left-0 right-0 h-6 bg-daw-bg rounded shadow-neu-btn flex items-center justify-center border-t border-daw-surface/20">
-                                <div class="w-4 h-[2px] bg-daw-accent shadow-[0_0_4px_white]"></div>
-                            </div>
-                        </div>
-                         <!-- Fader 3 -->
-                         <div class="h-32 w-8 bg-daw-bg rounded-full shadow-neu-in relative border border-daw-surface/5">
-                            <div class="absolute bottom-[80%] left-0 right-0 h-6 bg-daw-bg rounded shadow-neu-btn flex items-center justify-center border-t border-daw-surface/20">
-                                <div class="w-4 h-[2px] bg-daw-accent shadow-[0_0_4px_white]"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI Section -->
-            <div class="bg-daw-surface rounded-3xl p-8 border border-daw-surface/10 flex items-center justify-between shadow-neu-out">
-                <div>
-                    <h3 class="text-lg font-bold text-daw-text mb-2 flex items-center gap-2">
-                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2z"/><path d="m9 12 2 2 4-4"/></svg>
-                        AI Assistant Integrated
-                    </h3>
-                    <p class="text-xs text-daw-muted max-w-sm leading-relaxed">
-                        Powered by Gemini. The assistant reads your project state JSON to provide context-aware debugging and sound design tips.
+                    <h3 class="text-xl font-bold mb-3 text-white">Web Audio Engine</h3>
+                    <p class="text-daw-muted leading-relaxed max-w-lg">
+                        Built on a custom TypeScript audio engine using the native Web Audio API. 
+                        Features lookahead scheduling for precise timing, a dynamic node graph for flexible routing, 
+                        and real-time buffer manipulation for near-zero latency playback.
                     </p>
                 </div>
-                <div class="h-12 w-12 rounded-full bg-daw-bg shadow-neu-pressed flex items-center justify-center text-daw-accent animate-pulse">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+
+                <!-- Card 2 -->
+                <div class="p-8 bg-daw-panel border border-daw-border rounded-2xl hover:border-white/20 transition-colors group">
+                     <div class="w-10 h-10 bg-daw-surface rounded-full flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform shadow-lg border border-daw-border">
+                        <i data-lucide="sliders-horizontal" size="20"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">Subtractive Synth</h3>
+                    <p class="text-daw-muted text-sm leading-relaxed">
+                        3 Oscillators per voice.<br>
+                        Pulse Width Modulation (PWM).<br>
+                        Wavefolding & Unison.<br>
+                        Multi-mode Filter Resonance.
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="p-8 bg-daw-panel border border-daw-border rounded-2xl hover:border-white/20 transition-colors group">
+                     <div class="w-10 h-10 bg-daw-surface rounded-full flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform shadow-lg border border-daw-border">
+                        <i data-lucide="mic-2" size="20"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">FX Rack</h3>
+                    <p class="text-daw-muted text-sm leading-relaxed">
+                        Per-track effects chain including Parametric EQ, Bitcrusher, Distortion, Stereo Chorus, Delay, and Convolution Reverb.
+                    </p>
                 </div>
             </div>
-
         </div>
-    </main>
+    </section>
 
-    <!-- FOOTER -->
-    <footer class="bg-daw-bg border-t border-daw-surface/10 py-8 px-8 text-center md:text-left shadow-neu-out relative z-30">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-                <span class="text-sm font-bold text-daw-text uppercase tracking-widest">Os-Daw</span>
-                <p class="text-[10px] text-daw-muted mt-2 max-w-xs">
-                    Open source prototype provided as-is for educational purposes. 
-                    Licensed under Apache 2.0.
+    <!-- Footer -->
+    <footer class="py-16 border-t border-daw-border bg-[#050505]">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col items-center justify-center gap-6">
+            
+            <div class="w-16 h-16 rounded-full bg-daw-surface border border-daw-border flex items-center justify-center text-white opacity-50 hover:opacity-100 transition-opacity shadow-2xl">
+                <i data-lucide="cpu" size="32"></i>
+            </div>
+
+            <div class="text-center space-y-2">
+                <p class="text-sm font-bold text-white tracking-wide">Designed & Developed by Matthew Robert Wesney</p>
+                <p class="text-[10px] text-daw-muted font-mono uppercase tracking-widest">
+                    Open Source under Apache 2.0
                 </p>
             </div>
-            <div class="flex gap-6 text-[10px] font-bold text-daw-muted uppercase tracking-widest">
-                <a href="#" class="hover:text-daw-text transition-colors">GitHub</a>
-                <a href="#" class="hover:text-daw-text transition-colors">License</a>
-                <a href="#" class="hover:text-daw-text transition-colors">Contact</a>
+
+            <div class="flex gap-6 mt-4">
+                <a href="https://github.com/dovvnloading/Os-DAW" class="text-daw-muted hover:text-white transition-colors" title="GitHub">
+                    <i data-lucide="github" size="20"></i>
+                </a>
             </div>
         </div>
     </footer>
 
-    <!-- SCRIPTS FOR VISUALS -->
+    <!-- INTERACTION SCRIPTS -->
     <script>
-        // Generate Sequencer Grid items
-        const createGrid = (id, activeIndices) => {
-            const container = document.getElementById(id);
-            for(let i=0; i<8; i++) {
-                const isActive = activeIndices.includes(i);
-                const div = document.createElement('div');
-                div.className = `h-8 rounded md:h-10 transition-all ${isActive ? 'bg-daw-accent shadow-[0_0_10px_white]' : 'bg-daw-bg shadow-neu-out'}`;
-                container.appendChild(div);
-            }
-        };
+        // Init Icons
+        lucide.createIcons();
 
-        createGrid('seq-grid-1', [0, 3, 6]);
-        createGrid('seq-grid-2', [2, 4, 7]);
-
-        // Simple Canvas Visualizer in Header
-        const canvas = document.getElementById('nav-vis');
-        if(canvas) {
-            const ctx = canvas.getContext('2d');
-            const bars = 20;
+        // --- KNOB LOGIC ---
+        const knobs = document.querySelectorAll('.knob-body');
+        
+        knobs.forEach(knob => {
+            const pointer = knob.querySelector('.knob-pointer');
+            const outputId = knob.id.replace('knob-', 'val-');
+            const outputEl = document.getElementById(outputId);
             
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            // Initial render
+            updateKnobVisuals(knob, parseFloat(knob.dataset.value));
+
+            knob.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                const startY = e.clientY;
+                const startVal = parseFloat(knob.dataset.value);
+                const min = parseFloat(knob.dataset.min);
+                const max = parseFloat(knob.dataset.max);
                 
-                const w = canvas.width / bars;
-                for(let i=0; i<bars; i++) {
-                    const h = Math.random() * canvas.height * 0.6;
-                    // Centered bars
-                    const y = (canvas.height - h) / 2;
-                    ctx.fillRect(i * w + 2, y, w - 4, h);
+                // Show Value
+                if(outputEl) outputEl.style.opacity = '1';
+                document.body.style.cursor = 'ns-resize';
+
+                function onMove(moveEvent) {
+                    const delta = startY - moveEvent.clientY;
+                    const sensitivity = 0.5; // Pixels per value unit
+                    let newVal = startVal + (delta * sensitivity);
+                    
+                    // Clamp
+                    if(newVal < min) newVal = min;
+                    if(newVal > max) newVal = max;
+                    
+                    knob.dataset.value = newVal;
+                    updateKnobVisuals(knob, newVal);
+                    
+                    // Update Text
+                    if(outputEl) {
+                        if(knob.id === 'knob-cutoff') outputEl.innerText = Math.round(newVal) + 'Hz';
+                        else if (knob.id === 'knob-res') outputEl.innerText = (newVal / 10).toFixed(1);
+                        else outputEl.innerText = Math.round(newVal);
+                    }
+
+                    // Special visualizer trigger
+                    if(knob.id === 'knob-cutoff') updateWaveform(newVal);
                 }
-                setTimeout(() => requestAnimationFrame(animate), 100);
-            }
-            animate();
+
+                function onUp() {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                    document.body.style.cursor = 'default';
+                    if(outputEl) outputEl.style.opacity = '0';
+                }
+
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+            });
+        });
+
+        function updateKnobVisuals(knobElement, value) {
+            const min = parseFloat(knobElement.dataset.min);
+            const max = parseFloat(knobElement.dataset.max);
+            const percent = (value - min) / (max - min);
+            const angle = (percent * 270) - 135; // -135 to +135 deg
+            
+            const pointer = knobElement.querySelector('.knob-pointer');
+            pointer.style.transform = `rotate(${angle}deg)`;
         }
+
+        // --- VISUALIZER LOGIC ---
+        function updateWaveform(cutoffVal) {
+            // Morph SVG path based on cutoff value (0-100)
+            const path = document.getElementById('wave-path');
+            const height = 20; 
+            // Simple logic: higher cutoff = sharper curve
+            const curve = 5 + (cutoffVal / 100) * 35; // 5 to 40
+            
+            // Generate a slightly randomized wave to look "alive"
+            const d = `M0 ${height} Q 25 ${height - curve} 50 ${height} T 100 ${height}`;
+            path.setAttribute('d', d);
+        }
+
+        // --- SEQUENCER LOGIC ---
+        const sequencer = document.getElementById('sequencer-grid');
+        let isPlaying = false;
+        let currentStep = 0;
+        let intervalId = null;
+
+        // Re-generate steps with JS to ensure they are clean
+        sequencer.innerHTML = '';
+        const initialPattern = [0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0]; // 1=active
+        
+        for(let i=0; i<16; i++) {
+            const btn = document.createElement('div');
+            btn.className = `step-btn ${initialPattern[i] ? 'active' : ''}`;
+            btn.onclick = () => btn.classList.toggle('active');
+            sequencer.appendChild(btn);
+        }
+
+        // Playback Logic
+        const playBtn = document.getElementById('play-btn');
+        const meterL = document.getElementById('meter-l');
+        const meterR = document.getElementById('meter-r');
+
+        playBtn.addEventListener('click', togglePlay);
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const icon = playBtn.querySelector('i'); // lucide svg is replaced, need to re-target or just toggle class
+            
+            if(isPlaying) {
+                playBtn.classList.add('text-green-500', 'border-green-500');
+                intervalId = setInterval(tick, 150); // ~100bpm
+            } else {
+                playBtn.classList.remove('text-green-500', 'border-green-500');
+                clearInterval(intervalId);
+                // Reset visual state
+                const steps = document.querySelectorAll('.step-btn');
+                steps.forEach(s => s.classList.remove('playing-now'));
+                meterL.style.transform = 'scaleY(0)';
+                meterR.style.transform = 'scaleY(0)';
+            }
+        }
+
+        function tick() {
+            const steps = document.querySelectorAll('.step-btn');
+            
+            // Clear previous
+            steps.forEach(s => s.classList.remove('playing-now'));
+            
+            // Activate current
+            const activeStep = steps[currentStep];
+            activeStep.classList.add('playing-now');
+
+            // Simulate Audio Metering
+            // If the step is active, meter jumps up
+            if(activeStep.classList.contains('active')) {
+                const randL = 0.5 + Math.random() * 0.5; // 0.5 to 1.0
+                const randR = 0.5 + Math.random() * 0.5;
+                meterL.style.transform = `scaleY(${randL})`;
+                meterR.style.transform = `scaleY(${randR})`;
+            } else {
+                // Decay
+                meterL.style.transform = `scaleY(0.1)`;
+                meterR.style.transform = `scaleY(0.1)`;
+            }
+
+            // Advance
+            currentStep = (currentStep + 1) % 16;
+        }
+
     </script>
 </body>
 </html>
