@@ -1,0 +1,7 @@
+{
+  "name": "Os-Daw",
+  "description": "A professional-grade, open-source web-based Digital Audio Workstation with built-in AI assistance, 3-oscillator synthesis, and step sequencing.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

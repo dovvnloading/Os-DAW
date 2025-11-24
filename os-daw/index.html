@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Os-Daw | Professional Web Workstation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        /* Light Mode Variables - Brightened for cleaner look */
+        --c-bg: #EAF0F6; /* Lighter, cooler grey-white */
+        --c-panel: #EAF0F6;
+        --c-surface: #F2F5F9;
+        --c-accent: #2d3436; /* Dark Gray for contrast */
+        --c-text: #2d3436;
+        --c-muted: #94a3b8;
+        --c-dark: #DDE4ED;   /* Slightly darker inset for light mode */
+        
+        /* Adjusted shadows for lighter background */
+        --s-neu-out: 5px 5px 10px #c8d0d9, -5px -5px 10px #ffffff;
+        --s-neu-in: inset 5px 5px 10px #c8d0d9, inset -5px -5px 10px #ffffff;
+        --s-neu-btn: 3px 3px 6px #c8d0d9, -3px -3px 6px #ffffff;
+        --s-neu-pressed: inset 2px 2px 5px #c8d0d9, inset -2px -2px 5px #ffffff;
+        --s-neu-glow: 0 0 15px rgba(45, 52, 54, 0.4);
+      }
+
+      .dark {
+        /* Dark Mode Variables */
+        --c-bg: #212121;
+        --c-panel: #212121;
+        --c-surface: #262626;
+        --c-accent: #FFFFFF;
+        --c-text: #E0E0E0;
+        --c-muted: #757575;
+        --c-dark: #121212;
+
+        --s-neu-out: 6px 6px 12px #191919, -6px -6px 12px #292929;
+        --s-neu-in: inset 6px 6px 12px #191919, inset -6px -6px 12px #292929;
+        --s-neu-btn: 4px 4px 8px #191919, -4px -4px 8px #292929;
+        --s-neu-pressed: inset 3px 3px 6px #191919, inset -3px -3px 6px #292929;
+        --s-neu-glow: 0 0 15px rgba(255, 255, 255, 0.3);
+      }
+
+      body {
+        background-color: var(--c-bg);
+        color: var(--c-text);
+        overflow: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      
+      /* Custom scrollbar for panels */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--c-muted);
+        border-radius: 3px;
+        opacity: 0.5;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--c-text);
+      }
+      
+      .knob-drag-area {
+        cursor: ns-resize;
+      }
+      .neu-toggle:checked {
+        background-color: var(--c-accent);
+        box-shadow: 0 0 10px var(--c-accent);
+      }
+      
+      /* Utility to ensure elements transition smoothly during theme switch */
+      * {
+        transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+        transition-duration: 200ms;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              daw: {
+                bg: 'var(--c-bg)',
+                panel: 'var(--c-panel)',
+                surface: 'var(--c-surface)', 
+                accent: 'var(--c-accent)', 
+                text: 'var(--c-text)',    
+                muted: 'var(--c-muted)', 
+                dark: 'var(--c-dark)'     
+              }
+            },
+            boxShadow: {
+              'neu-out': 'var(--s-neu-out)',
+              'neu-in': 'var(--s-neu-in)',
+              'neu-btn': 'var(--s-neu-btn)',
+              'neu-pressed': 'var(--s-neu-pressed)',
+              'neu-glow': 'var(--s-neu-glow)'
+            },
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace']
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
